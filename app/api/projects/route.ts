@@ -70,14 +70,22 @@ export async function POST(req: NextRequest) {
   try {
     const cookieStore = cookies();
     const token = req.cookies.get('__session')?.value;
-    console.log('Token from cookie:', token); // 👈 Log this
+    console.log('Token from cookie:', token ? 'Found (hidden)' : 'Missing'); 
+    console.log('Reviewing DB URL presence:', process.env.DATABASE_URL ? 'Present' : 'Missing');
 
     if (!token) {
-      console.warn('No token found');
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+      console.warn('No token found in cookies');
+      return NextResponse.json({ message: 'Unauthorized - Missing Token' }, { status: 401 });
     }
 
-    const decodedToken = await getAuth().verifyIdToken(token);
+    let decodedToken;
+    try {
+        decodedToken = await getAuth().verifyIdToken(token);
+    } catch (authError) {
+        console.error('Firebase Auth Verification Failed:', authError);
+        return NextResponse.json({ message: 'Unauthorized - Invalid Token' }, { status: 401 });
+    }
+
     console.log('Decoded Firebase UID:', decodedToken.uid);
     const firebaseUid = decodedToken.uid;
 

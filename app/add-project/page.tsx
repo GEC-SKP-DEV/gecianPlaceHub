@@ -73,6 +73,7 @@ const AddProjectPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Submit button clicked", { loading, formData });
     if (loading) return;
 
     const hasValidMember = formData.members.some(
@@ -386,6 +387,7 @@ const AddProjectPage = () => {
           <div className="flex gap-4">
             <button
               type="submit"
+              onClick={() => console.log("Save button clicked directly")}
               className={`flex-1 bg-blue-600 text-white px-4 py-3 rounded-lg flex items-center justify-center ${
                 loading ||
                 formData.members.every((m) => m.name.trim() === "")
