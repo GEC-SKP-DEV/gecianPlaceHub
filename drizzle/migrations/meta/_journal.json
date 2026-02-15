@@ -8,6 +8,13 @@
       "when": 1758032247653,
       "tag": "0000_square_hemingway",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1771149579242,
+      "tag": "0001_groovy_sprite",
+      "breakpoints": true
     }
   ]
 }

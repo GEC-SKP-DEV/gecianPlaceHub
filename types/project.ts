@@ -13,7 +13,7 @@ export interface Project {
   contactWhatsApp?: string;
 
   // ✅ Add this to fix the "any" error in edit page
-  selectedCategoryOptions: Record<string, string>;
+  selectedCategoryOptions: Record<string, string | string[]>;
 }
 
 export interface CategoryOption {
@@ -24,5 +24,8 @@ export interface CategoryOption {
 export interface Category {
   categoryId: number;
   categoryName: string;
+  inputType: "single-select" | "multi-select" | "range-slider" | "text";
+  minValue?: number;
+  maxValue?: number;
   options: CategoryOption[];
 }

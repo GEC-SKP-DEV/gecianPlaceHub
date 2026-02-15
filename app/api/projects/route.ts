@@ -136,38 +136,41 @@ export async function POST(req: NextRequest) {
     if (projectCategoryOptions && newProject.projectId) {
       for (const mapping of projectCategoryOptions) {
         console.log(`POST /api/projects - Processing category mapping: ${mapping.categoryName} = ${mapping.optionName}`);
-        if (mapping.optionName) { 
-          const category = await db.select({ categoryId: categories.categoryId }).from(categories).where(eq(categories.category, mapping.categoryName));
-          console.log(`POST /api/projects - Category lookup result for ${mapping.categoryName}:`, category);
+        
+        const category = await db.select({ categoryId: categories.categoryId }).from(categories).where(eq(categories.category, mapping.categoryName));
+        console.log(`POST /api/projects - Category lookup result for ${mapping.categoryName}:`, category);
 
-          if (category.length > 0 && category[0].categoryId) {
-            // Determine the actual option name to link in categoryOptionValues
-            // If it's the 'Domain' category and customDomain is provided, link to 'Other'
-            const actualOptionNameForLinking = (mapping.categoryName === 'Domain' && customDomain) ? 'Other' : mapping.optionName;
+        if (category.length > 0 && category[0].categoryId) {
+          // Handle both single values and arrays (for multi-select)
+          const optionNames = Array.isArray(mapping.optionName) ? mapping.optionName : [mapping.optionName];
+          
+          for (const optionName of optionNames) {
+            if (optionName) {
+              // Determine the actual option name to link in categoryOptionValues
+              const actualOptionNameForLinking = (mapping.categoryName === 'Domain' && customDomain) ? 'Other' : optionName;
 
-            const option = await db.select({ optionId: categoryOptionValues.optionId }).from(categoryOptionValues)
-                                   .where(and(
-                                       eq(categoryOptionValues.optionName, actualOptionNameForLinking),
-                                       eq(categoryOptionValues.categoryId, category[0].categoryId)
-                                   ));
-            console.log(`POST /api/projects - Option lookup result for ${actualOptionNameForLinking} in category ${mapping.categoryName}:`, option);
+              const option = await db.select({ optionId: categoryOptionValues.optionId }).from(categoryOptionValues)
+                                     .where(and(
+                                         eq(categoryOptionValues.optionName, actualOptionNameForLinking),
+                                         eq(categoryOptionValues.categoryId, category[0].categoryId)
+                                     ));
+              console.log(`POST /api/projects - Option lookup result for ${actualOptionNameForLinking} in category ${mapping.categoryName}:`, option);
 
-            if (option.length > 0 && option[0].optionId) {
-              console.log('POST /api/projects - Inserting into projectOptions:', { projectId: newProject.projectId, categoryId: category[0].categoryId, optionId: option[0].optionId });
-              await db.insert(projectOptions).values({
-                projectId: newProject.projectId,
-                categoryId: category[0].categoryId,
-                optionId: option[0].optionId,
-              });
-              console.log('POST /api/projects - Inserted into projectOptions.');
-            } else {
-              console.warn(`POST /api/projects - Option not found for ${actualOptionNameForLinking} in category ${mapping.categoryName}. Skipping linking.`);
+              if (option.length > 0 && option[0].optionId) {
+                console.log('POST /api/projects - Inserting into projectOptions:', { projectId: newProject.projectId, categoryId: category[0].categoryId, optionId: option[0].optionId });
+                await db.insert(projectOptions).values({
+                  projectId: newProject.projectId,
+                  categoryId: category[0].categoryId,
+                  optionId: option[0].optionId,
+                });
+                console.log('POST /api/projects - Inserted into projectOptions.');
+              } else {
+                console.warn(`POST /api/projects - Option not found for ${actualOptionNameForLinking} in category ${mapping.categoryName}. Skipping linking.`);
+              }
             }
-          } else {
-            console.warn(`POST /api/projects - Category not found for name: ${mapping.categoryName}. Skipping linking.`);
           }
         } else {
-          console.log(`POST /api/projects - Option name is empty for category ${mapping.categoryName}. Skipping linking.`);
+          console.warn(`POST /api/projects - Category not found for name: ${mapping.categoryName}. Skipping linking.`);
         }
       }
     }
@@ -222,35 +225,38 @@ export async function PUT(req: NextRequest) {
     if (projectCategoryOptions && projectCategoryOptions.length > 0) {
       for (const mapping of projectCategoryOptions) {
         console.log(`PUT /api/projects - Processing category mapping: ${mapping.categoryName} = ${mapping.optionName}`);
-        if (mapping.optionName) {
-          const category = await db.select({ categoryId: categories.categoryId }).from(categories).where(eq(categories.category, mapping.categoryName));
+        
+        const category = await db.select({ categoryId: categories.categoryId }).from(categories).where(eq(categories.category, mapping.categoryName));
 
-          if (category.length > 0 && category[0].categoryId) {
-            // Determine the actual option name to link in categoryOptionValues
-            // If it's the 'Domain' category and customDomain is provided, link to 'Other'
-            const actualOptionNameForLinking = (mapping.categoryName === 'Domain' && customDomain) ? 'Other' : mapping.optionName;
+        if (category.length > 0 && category[0].categoryId) {
+          // Handle both single values and arrays (for multi-select)
+          const optionNames = Array.isArray(mapping.optionName) ? mapping.optionName : [mapping.optionName];
+          
+          for (const optionName of optionNames) {
+            if (optionName) {
+              // Determine the actual option name to link in categoryOptionValues
+              const actualOptionNameForLinking = (mapping.categoryName === 'Domain' && customDomain) ? 'Other' : optionName;
 
-            const option = await db.select({ optionId: categoryOptionValues.optionId }).from(categoryOptionValues)
-                                   .where(and(
-                                       eq(categoryOptionValues.optionName, actualOptionNameForLinking),
-                                       eq(categoryOptionValues.categoryId, category[0].categoryId)
-                                   ));
-            console.log(`PUT /api/projects - Option lookup result for ${actualOptionNameForLinking} in category ${mapping.categoryName}:`, option);
+              const option = await db.select({ optionId: categoryOptionValues.optionId }).from(categoryOptionValues)
+                                     .where(and(
+                                         eq(categoryOptionValues.optionName, actualOptionNameForLinking),
+                                         eq(categoryOptionValues.categoryId, category[0].categoryId)
+                                     ));
+              console.log(`PUT /api/projects - Option lookup result for ${actualOptionNameForLinking} in category ${mapping.categoryName}:`, option);
 
-            if (option.length > 0 && option[0].optionId) {
-              await db.insert(projectOptions).values({
-                projectId: projectId,
-                categoryId: category[0].categoryId,
-                optionId: option[0].optionId,
-              });
-            } else {
-              console.warn(`PUT /api/projects - Option not found for ${actualOptionNameForLinking} in category ${mapping.categoryName}. Skipping linking.`);
+              if (option.length > 0 && option[0].optionId) {
+                await db.insert(projectOptions).values({
+                  projectId: projectId,
+                  categoryId: category[0].categoryId,
+                  optionId: option[0].optionId,
+                });
+              } else {
+                console.warn(`PUT /api/projects - Option not found for ${actualOptionNameForLinking} in category ${mapping.categoryName}. Skipping linking.`);
+              }
             }
-          } else {
-            console.warn(`PUT /api/projects - Category not found for name: ${mapping.categoryName}. Skipping linking.`);
           }
         } else {
-          console.log(`PUT /api/projects - Option name is empty for category ${mapping.categoryName}. Skipping linking.`);
+          console.warn(`PUT /api/projects - Category not found for name: ${mapping.categoryName}. Skipping linking.`);
         }
       }
       console.log('PUT /api/projects - Project category options updated.');

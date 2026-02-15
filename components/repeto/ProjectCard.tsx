@@ -19,9 +19,9 @@ export default function ProjectCard({ project }: ProjectCardProps) {
     return project.categories?.find(cat => cat.categoryName === categoryName)?.optionName;
   };
 
-  const yearOfSubmission = getCategoryOption("Year of Submission");
-  const projectType = getCategoryOption("Project Type");
-  const domain = getCategoryOption("Domain");
+  const yearOfSubmission = getCategoryOption("Qualification");
+  const projectType = getCategoryOption("Job Type ");
+  const domain = getCategoryOption("backlog");
 
   return (
     <div 
@@ -56,21 +56,21 @@ export default function ProjectCard({ project }: ProjectCardProps) {
             <div className="flex items-center space-x-3 group">
               <CalendarDays className="w-5 h-5 text-blue-600" />
               <div>
-                <p className="text-gray-500 text-xs">Year</p>
+                <p className="text-gray-500 text-xs">Backlogs</p>
                 <p className="text-gray-800 font-medium">{yearOfSubmission}</p>
               </div>
             </div>
             <div className="flex items-center space-x-3 group">
               <WalletCards className="w-5 h-5 text-blue-600" />
               <div>
-                <p className="text-gray-500 text-xs">Project Type</p>
+                <p className="text-gray-500 text-xs">Salary</p>
                 <p className="text-gray-800 font-medium">{projectType}</p>
               </div>
             </div>
             <div className="flex items-center space-x-3 group">
               <Users className="w-5 h-5 text-blue-600" />
               <div>
-                <p className="text-gray-500 text-xs">Domain</p>
+                <p className="text-gray-500 text-xs">Venue</p>
                 <p className="text-gray-800 font-medium">{domain === 'Other' ? project.customDomain || 'Other' : domain}</p>
               </div>
             </div>
@@ -84,7 +84,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
               className="group flex items-center gap-2 bg-blue-600 text-white py-2 px-6 rounded-md hover:bg-blue-700 transition-all duration-300 hover:shadow-lg"
             >
               <LinkIcon className="w-4 h-4 group-hover:animate-bounce" />
-              <span>View Project</span>
+              <span>Google Forum</span>
             </Link>
           </div>
           

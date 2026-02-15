@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { ArrowLeft, Save, XCircle } from "lucide-react";
 import Link from "next/link";
 import { auth } from "@/lib/firebase/config"; // Import auth
+import CategoryField from "@/components/CategoryField";
 
 interface CategoryOption {
   optionId: number;
@@ -13,6 +14,9 @@ interface CategoryOption {
 interface Category {
   categoryId: number;
   categoryName: string;
+  inputType: "single-select" | "multi-select" | "range-slider" | "text";
+  minValue?: number;
+  maxValue?: number;
   options: CategoryOption[];
 }
 
@@ -45,7 +49,7 @@ const AddProjectPage = () => {
     projectLink: "",
     createdAt: "",
     members: [{ name: "", linkedin: "" }],
-    selectedCategoryOptions: {} as Record<string, string>,
+    selectedCategoryOptions: {} as Record<string, string | string[]>,
     customDomain: "",
     contactInstagram: "",
     contactLinkedIn: "",
@@ -60,10 +64,16 @@ const AddProjectPage = () => {
   useEffect(() => {
     if (!loadingCategories && categories.length > 0) {
       setFormData((prev) => {
-        const newSelectedOptions: Record<string, string> = {};
+        const newSelectedOptions: Record<string, string | string[]> = {};
         categories.forEach((cat) => {
-          if (cat.options.length > 0) {
+          if (cat.inputType === 'multi-select') {
+            newSelectedOptions[cat.categoryName] = [];
+          } else if (cat.options.length > 0 && (cat.inputType === 'single-select')) {
             newSelectedOptions[cat.categoryName] = cat.options[0].optionName;
+          } else if (cat.inputType === 'range-slider') {
+            newSelectedOptions[cat.categoryName] = cat.minValue || 0;
+          } else if (cat.inputType === 'text') {
+            newSelectedOptions[cat.categoryName] = '';
           }
         });
         return { ...prev, selectedCategoryOptions: newSelectedOptions };
@@ -90,15 +100,32 @@ const AddProjectPage = () => {
       (member) => member.name.trim() !== ""
     );
 
-    const projectCategoryOptions :{categoryName: string; optionName:string}[]= Object.entries(
+    const projectCategoryOptions: Array<{categoryName: string; optionName: string | string[]}> = Object.entries(
       formData.selectedCategoryOptions
-    ).map(([categoryName, optionName]) => ({
-      categoryName,
-      optionName:
-        categoryName === "Domain" && optionName === "Other"
-          ? formData.customDomain
-          : optionName,
-    }));
+    ).map(([categoryName, optionName]) => {
+      const category = categories.find(c => c.categoryName === categoryName);
+      
+      // For multi-select, handle array values
+      if (category?.inputType === 'multi-select' && Array.isArray(optionName)) {
+        return {
+          categoryName,
+          optionName: optionName, // Keep as array for multi-select
+        };
+      }
+      
+      // For single-select Domain with custom value
+      if (categoryName === "Domain" && optionName === "Other") {
+        return {
+          categoryName,
+          optionName: formData.customDomain,
+        };
+      }
+      
+      return {
+        categoryName,
+        optionName: typeof optionName === 'string' ? optionName : String(optionName),
+      };
+    });
 
     const projectData = {
       projectName: formData.projectName,
@@ -157,7 +184,18 @@ const AddProjectPage = () => {
     >
   ) => {
     const { name, value } = e.target;
-    if (name.startsWith("category-")) {
+    if (name.startsWith("field-")) {
+      const categoryId = parseInt(name.replace("field-", ""));
+      const category = categories.find(c => c.categoryId === categoryId);
+      const categoryName = category?.categoryName || '';
+      setFormData((prev) => ({
+        ...prev,
+        selectedCategoryOptions: {
+          ...prev.selectedCategoryOptions,
+          [categoryName]: value,
+        },
+      }));
+    } else if (name.startsWith("category-")) {
       const categoryName = name.replace("category-", "");
       setFormData((prev) => ({
         ...prev,
@@ -169,6 +207,16 @@ const AddProjectPage = () => {
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
+  };
+
+  const handleCategoryChange = (categoryName: string, value: string | string[] | number) => {
+    setFormData((prev) => ({
+      ...prev,
+      selectedCategoryOptions: {
+        ...prev.selectedCategoryOptions,
+        [categoryName]: value,
+      },
+    }));
   };
 
   const handleMemberChange = (index: number, field: string, value: string) => {
@@ -247,38 +295,13 @@ const AddProjectPage = () => {
           />
 
           {categories.length>0 && categories.map((category) => (
-            <div key={category.categoryId} className="mb-4">
-              <label className="block mb-1 text-sm font-medium">
-                {category.categoryName}
-              </label>
-              <select
-              id={`category-${category.categoryName}`}
-                name={`category-${category.categoryName}`}
-                required
-                className="w-full px-4 py-2 border rounded-lg"
-                onChange={handleChange}
-                value={
-                  formData.selectedCategoryOptions[category.categoryName] || ""
-                }
-              >
-                {category.options.map((option) => (
-                  <option key={option.optionId} value={option.optionName}>
-                    {option.optionName}
-                  </option>
-                ))}
-              </select>
-              {category.categoryName === "Domain" &&
-                formData.selectedCategoryOptions["Domain"] === "Other" && (
-                  <input
-                    type="text"
-                    name="customDomain"
-                    className="mt-2 w-full px-4 py-2 border rounded-lg"
-                    placeholder="Enter custom domain"
-                    onChange={handleChange}
-                    value={formData.customDomain}
-                  />
-                )}
-            </div>
+            <CategoryField
+              key={category.categoryId}
+              category={category}
+              value={formData.selectedCategoryOptions[category.categoryName] || ''}
+              onChange={(value) => handleCategoryChange(category.categoryName, value)}
+              required
+            />
           ))}
 
           <input

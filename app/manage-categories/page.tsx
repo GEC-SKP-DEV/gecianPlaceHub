@@ -11,6 +11,9 @@ interface CategoryOption {
 interface Category {
   categoryId?: number;
   categoryName: string;
+  inputType: 'single-select' | 'multi-select' | 'range-slider' | 'text';
+  minValue?: number;
+  maxValue?: number;
   options: CategoryOption[];
 }
 
@@ -216,6 +219,7 @@ export default function ManageCategoriesPage() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Input Type</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Options</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
@@ -224,8 +228,19 @@ export default function ManageCategoriesPage() {
               {categories.map((category) => (
                 <tr key={category.categoryId}>
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">{category.categoryName}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">
+                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {category.inputType === 'single-select' && 'Single Select'}
+                      {category.inputType === 'multi-select' && 'Multi-Select'}
+                      {category.inputType === 'range-slider' && 'Range Slider'}
+                      {category.inputType === 'text' && 'Text Input'}
+                    </span>
+                  </td>
                   <td className="px-6 py-4 text-sm text-gray-500 overflow-hidden text-ellipsis">
-                    {category.options.map(o => o.optionName).join(', ')}
+                    {category.options.length > 0 
+                      ? category.options.map(o => o.optionName).join(', ')
+                      : (category.inputType === 'range-slider' ? `Range: ${category.minValue} - ${category.maxValue}` : 'N/A')
+                    }
                   </td>
                   <td className="px-6 py-4 text-right text-sm font-medium">
                     <button
@@ -265,34 +280,83 @@ export default function ManageCategoriesPage() {
                   />
                 </div>
 
-                <h3 className="text-lg font-bold mb-2">Options</h3>
-                {currentCategory?.options.map((option, index) => (
-                  <div key={index} className="flex flex-col sm:flex-row mb-2 items-center w-full">
-                    <input
-                      type="text"
-                      name="optionName"
-                      value={option.optionName || ''}
-                      onChange={(e) => handleOptionChange(index, e)}
-                      className="flex-1 border border-gray-300 rounded-md shadow-sm p-2 mr-2 w-full mb-2 sm:mb-0"
-                      placeholder="Option Name"
-                      required
-                    />
+                <div className="mb-4">
+                  <label htmlFor="inputType" className="block text-sm font-medium text-gray-700">Input Type</label>
+                  <select
+                    id="inputType"
+                    name="inputType"
+                    value={currentCategory?.inputType || 'single-select'}
+                    onChange={(e) => setCurrentCategory((prev) => prev ? { ...prev, inputType: e.target.value as any, options: (e.target.value === 'range-slider' || e.target.value === 'text') ? [] : prev.options } : null)}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                  >
+                    <option value="single-select">Single Select</option>
+                    <option value="multi-select">Multi-Select</option>
+                    <option value="range-slider">Range Slider</option>
+                    <option value="text">Text Input</option>
+                  </select>
+                </div>
+
+                {(currentCategory?.inputType === 'range-slider') && (
+                  <>
+                    <div className="mb-4 grid grid-cols-2 gap-2">
+                      <div>
+                        <label htmlFor="minValue" className="block text-sm font-medium text-gray-700">Min Value</label>
+                        <input
+                          type="number"
+                          id="minValue"
+                          name="minValue"
+                          value={currentCategory?.minValue || 0}
+                          onChange={(e) => setCurrentCategory((prev) => prev ? { ...prev, minValue: parseInt(e.target.value) || 0 } : null)}
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="maxValue" className="block text-sm font-medium text-gray-700">Max Value</label>
+                        <input
+                          type="number"
+                          id="maxValue"
+                          name="maxValue"
+                          value={currentCategory?.maxValue || 100}
+                          onChange={(e) => setCurrentCategory((prev) => prev ? { ...prev, maxValue: parseInt(e.target.value) || 100 } : null)}
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {(currentCategory?.inputType === 'single-select' || currentCategory?.inputType === 'multi-select') && (
+                  <>
+                    <h3 className="text-lg font-bold mb-2">Options</h3>
+                    {currentCategory?.options.map((option, index) => (
+                      <div key={index} className="flex flex-col sm:flex-row mb-2 items-center w-full">
+                        <input
+                          type="text"
+                          name="optionName"
+                          value={option.optionName || ''}
+                          onChange={(e) => handleOptionChange(index, e)}
+                          className="flex-1 border border-gray-300 rounded-md shadow-sm p-2 mr-2 w-full mb-2 sm:mb-0"
+                          placeholder="Option Name"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveOption(index)}
+                          className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 w-full sm:w-auto"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
                     <button
                       type="button"
-                      onClick={() => handleRemoveOption(index)}
-                      className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 w-full sm:w-auto"
+                      onClick={handleAddOption}
+                      className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 mb-4 w-full sm:w-auto"
                     >
-                      Remove
+                      Add Option
                     </button>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={handleAddOption}
-                  className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 mb-4 w-full sm:w-auto"
-                >
-                  Add Option
-                </button>
+                  </>
+                )}
 
                 <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4">
                   <button

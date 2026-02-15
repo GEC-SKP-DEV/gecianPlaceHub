@@ -9,11 +9,20 @@ export async function GET() {
     
     const results = await Promise.all(allCategories.map(async (cat) => {
       let options: { optionId: number | null; optionName: string | null; }[] = [];
-      options = await db.select({ optionId: categoryOptionValues.optionId, optionName: categoryOptionValues.optionName })
-                        .from(categoryOptionValues)
-                        .where(eq(categoryOptionValues.categoryId, cat.categoryId!))
-                        .execute();
-      return { categoryId: cat.categoryId, categoryName: cat.category, options: options.filter(o => o.optionName !== null) };
+      if (cat.inputType !== "text" && cat.inputType !== "range-slider") {
+        options = await db.select({ optionId: categoryOptionValues.optionId, optionName: categoryOptionValues.optionName })
+                          .from(categoryOptionValues)
+                          .where(eq(categoryOptionValues.categoryId, cat.categoryId!))
+                          .execute();
+      }
+      return { 
+        categoryId: cat.categoryId, 
+        categoryName: cat.category, 
+        inputType: cat.inputType || "single-select",
+        minValue: cat.minValue,
+        maxValue: cat.maxValue,
+        options: options.filter(o => o.optionName !== null) 
+      };
     }));
 
     return NextResponse.json(results);
@@ -25,15 +34,20 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { categoryName, options } = await req.json();
+    const { categoryName, inputType, minValue, maxValue, options } = await req.json();
 
     if (!categoryName) {
       return NextResponse.json({ message: "Category name is required." }, { status: 400 });
     }
 
-    const [newCategory] = await db.insert(categories).values({ category: categoryName }).returning({ categoryId: categories.categoryId });
+    const [newCategory] = await db.insert(categories).values({ 
+      category: categoryName,
+      inputType: inputType || "single-select",
+      minValue: minValue || null,
+      maxValue: maxValue || null,
+    }).returning({ categoryId: categories.categoryId });
 
-    if (options && options.length > 0 && newCategory && newCategory.categoryId) {
+    if ((inputType === "single-select" || inputType === "multi-select") && options && options.length > 0 && newCategory && newCategory.categoryId) {
       for (const option of options) {
         if (option.optionName) {
           await db.insert(categoryOptionValues).values({ 
@@ -53,9 +67,9 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const { categoryId, categoryName, options } = await req.json();
+    const { categoryId, categoryName, inputType, minValue, maxValue, options } = await req.json();
 
-    console.log('PUT /api/categories - Incoming data:', { categoryId, categoryName, options });
+    console.log('PUT /api/categories - Incoming data:', { categoryId, categoryName, inputType, minValue, maxValue, options });
 
     if (!categoryId || !categoryName) {
       console.error('Validation Error: Category ID or name missing for update.', { categoryId, categoryName });
@@ -63,7 +77,12 @@ export async function PUT(req: NextRequest) {
     }
 
     const [updatedCategory] = await db.update(categories)
-      .set({ category: categoryName })
+      .set({ 
+        category: categoryName,
+        inputType: inputType || "single-select",
+        minValue: minValue || null,
+        maxValue: maxValue || null,
+      })
       .where(eq(categories.categoryId, categoryId))
       .returning();
 
@@ -76,7 +95,7 @@ export async function PUT(req: NextRequest) {
 
     const optionsToProcess = Array.isArray(options) ? options : [];
 
-    if (optionsToProcess.length > 0) {
+    if ((inputType === "single-select" || inputType === "multi-select") && optionsToProcess.length > 0) {
       console.log('PUT /api/categories - Deleting existing project options for categoryId:', categoryId);
       // First, delete related entries from projectOptions to satisfy foreign key constraint
       await db.delete(projectOptions).where(eq(projectOptions.categoryId, categoryId));
@@ -103,13 +122,13 @@ export async function PUT(req: NextRequest) {
       } else {
         console.log('PUT /api/categories - No valid options to insert.');
       }
-    } else if (optionsToProcess.length === 0 && options !== undefined) { // Check if options was explicitly an empty array
+    } else if ((inputType === "single-select" || inputType === "multi-select") && optionsToProcess.length === 0 && options !== undefined) {
       console.log('PUT /api/categories - Options array is empty, deleting all existing project options and category options.');
       // Delete related entries from projectOptions first
       await db.delete(projectOptions).where(eq(projectOptions.categoryId, categoryId));
       await db.delete(categoryOptionValues).where(eq(categoryOptionValues.categoryId, categoryId));
     } else {
-      console.log('PUT /api/categories - No options provided or options is not an array. Skipping option updates.');
+      console.log('PUT /api/categories - No options needed for inputType:', inputType, 'Skipping option updates.');
     }
 
     return NextResponse.json({ message: "Category updated successfully." });

@@ -1,0 +1,23 @@
+
+> code_compass@0.1.0 dev
+> next dev
+
+ ⚠ Port 3000 is in use by an unknown process, using available port 3001 instead.
+   ▲ Next.js 15.5.7
+   - Local:        http://localhost:3001
+   - Network:      http://10.206.184.56:3001
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 2.3s
+   Reload env: .env
+   Reload env: .env
+   Reload env: .env
+   Reload env: .env
+   Reload env: .env
+   Reload env: .env
+   Reload env: .env
+   Reload env: .env
+   Reload env: .env
+   Reload env: .env
+[?25h

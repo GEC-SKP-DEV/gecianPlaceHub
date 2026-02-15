@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import TableSkeleton from '@/components/repeto/TableSkeleton';
+import CategoryField from '@/components/CategoryField';
 
 interface TeamMember {
   memberId?: number;
@@ -16,7 +17,7 @@ interface Project {
   projectLink?: string;
   createdAt: string;
   members: TeamMember[];
-  selectedCategoryOptions: Record<string, string>; // Map category name to selected option name
+  selectedCategoryOptions: Record<string, string | string[]>; // Map category name to selected option name(s)
   customDomain?: string; // Keep customDomain separate if 'Domain' is 'Other'
   categories?: { categoryName: string; optionName: string; customDomain?: string }[];
 }
@@ -29,6 +30,9 @@ interface CategoryOption {
 interface Category {
   categoryId: number;
   categoryName: string;
+  inputType: "single-select" | "multi-select" | "range-slider" | "text";
+  minValue?: number;
+  maxValue?: number;
   options: CategoryOption[];
 }
 
@@ -104,27 +108,48 @@ export default function ManageProjectsPage() {
   };
 
   const handleAddProject = () => {
+    const selectedCategoryOptions: Record<string, string | string[]> = {};
+    categories.forEach((cat) => {
+      if (cat.inputType === 'multi-select') {
+        selectedCategoryOptions[cat.categoryName] = [];
+      } else if (cat.options.length > 0 && (cat.inputType === 'single-select')) {
+        selectedCategoryOptions[cat.categoryName] = cat.options[0].optionName;
+      } else if (cat.inputType === 'range-slider') {
+        selectedCategoryOptions[cat.categoryName] = cat.minValue || 0;
+      } else if (cat.inputType === 'text') {
+        selectedCategoryOptions[cat.categoryName] = '';
+      }
+    });
+
     setCurrentProject({
       projectName: '',
       projectDescription: '',
       projectLink: '',
       createdAt: new Date().toISOString().split('T')[0],
       members: [{ name: '', linkedin: '' }],
-      selectedCategoryOptions: {},
+      selectedCategoryOptions,
     });
     setIsModalOpen(true);
-  };
+  }
 
   const handleEditProject = (project: Project) => {
     console.log('Editing Project:', project);
-    const selectedCategoryOptions: Record<string, string> = {};
+    const selectedCategoryOptions: Record<string, string | string[]> = {};
 
     // Initialize all categories with existing project values or empty string
     categories.forEach(category => {
-      const projectOption = project.categories?.find(
+      const projectOptions = project.categories?.filter(
         pco => pco.categoryName.toLowerCase() === category.categoryName.toLowerCase()
       );
-      selectedCategoryOptions[category.categoryName] = projectOption?.optionName.trim() || '';
+      
+      if (category.inputType === 'multi-select') {
+        // For multi-select, collect all matching options into an array
+        selectedCategoryOptions[category.categoryName] = projectOptions?.map(po => po.optionName.trim()) || [];
+      } else {
+        // For single-select and others, take the first value or empty string
+        selectedCategoryOptions[category.categoryName] = projectOptions?.[0]?.optionName.trim() || '';
+      }
+      
       if (category.categoryName === 'Year of Submission') {
         console.log(`handleEditProject - Year of Submission - projectOption: ${projectOption?.optionName}, trimmed: ${projectOption?.optionName.trim()}, selectedCategoryOptions: ${selectedCategoryOptions[category.categoryName]}`);
       }
@@ -175,10 +200,31 @@ export default function ManageProjectsPage() {
     );
 
     // Prepare category options for backend
-    const projectCategoryOptions: { categoryName: string; optionName: string; customDomain?: string }[] = Object.entries(currentProject.selectedCategoryOptions).map(([categoryName, optionName]) => ({
-      categoryName,
-      optionName: categoryName === 'Domain' && optionName === 'Other' ? (currentProject.customDomain || '') : optionName // Use customDomain if 'Other' domain is selected
-    }));
+    const projectCategoryOptions: Array<{categoryName: string; optionName: string | string[]; customDomain?: string}> = Object.entries(currentProject.selectedCategoryOptions).map(([categoryName, optionName]) => {
+      const category = categories.find(c => c.categoryName === categoryName);
+      
+      // For multi-select, keep as array
+      if (category?.inputType === 'multi-select' && Array.isArray(optionName)) {
+        return {
+          categoryName,
+          optionName: optionName,
+        };
+      }
+      
+      // For Domain with custom value
+      if (categoryName === 'Domain' && optionName === 'Other') {
+        return {
+          categoryName,
+          optionName: currentProject.customDomain || '',
+          customDomain: currentProject.customDomain,
+        };
+      }
+      
+      return {
+        categoryName,
+        optionName: typeof optionName === 'string' ? optionName : String(optionName),
+      };
+    });
 
     const projectData = {
       projectId: currentProject.projectId, // Include projectId for PUT requests
@@ -238,6 +284,21 @@ export default function ManageProjectsPage() {
     if (name.startsWith("category-") && name.replace("category-", "") === 'Year of Submission') {
       console.log(`handleChange - Year of Submission - name: ${name}, value: ${value}, trimmed: ${value.trim()}`);
     }
+  };
+
+  const handleCategoryChange = (categoryName: string, value: string | string[] | number) => {
+    setCurrentProject((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        selectedCategoryOptions: {
+          ...prev.selectedCategoryOptions,
+          [categoryName]: value,
+        },
+        // Clear customDomain if the Domain category is not 'Other'
+        customDomain: categoryName === 'Domain' && value !== 'Other' ? '' : prev.customDomain,
+      };
+    });
   };
 
   const handleMemberChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -368,27 +429,15 @@ export default function ManageProjectsPage() {
                   />
                 </div>
 
-                {/* Dynamic Category Selects */}
+                {/* Dynamic Category Fields */}
                 {categories.length > 0 && categories.map(category => (
-                  <div key={category.categoryId} className="mb-4">
-                    <label htmlFor={`category-${category.categoryName}`} className="block text-sm font-medium text-gray-700">
-                      {category.categoryName}
-                    </label>
-                    <select
-                      id={`category-${category.categoryName}`}
-                      name={`category-${category.categoryName}`}
-                      required
-                      className="w-full px-4 py-2 border rounded-lg"
-                      onChange={handleChange}
+                  <div key={category.categoryId}>
+                    <CategoryField
+                      category={category}
                       value={currentProject.selectedCategoryOptions[category.categoryName] || ''}
-                    >
-                      <option value="">Select a {category.categoryName}</option>
-                      {category.options.map((option) => (
-                        <option key={option.optionId} value={option.optionName.trim()}>
-                          {option.optionName}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(value) => handleCategoryChange(category.categoryName, value)}
+                      required
+                    />
                     {category.categoryName === 'Domain' && currentProject.selectedCategoryOptions['Domain'] === 'Other' && (
                       <input
                         type="text"
