@@ -30,12 +30,12 @@ const AddProjectFAB = () => {
       <button
         className="
           relative overflow-hidden rounded-full shadow-lg
-          bg-gradient-to-r from-blue-600 to-indigo-600
-          hover:from-blue-700 hover:to-indigo-700
+          bg-gradient-to-r from-green-600 to-teal-600
+          hover:from-green-700 hover:to-teal-700
           transform transition-all duration-200 ease-in-out
           hover:scale-105 hover:shadow-xl p-4 md:px-6
-          border-0 group-hover:ring-4 ring-blue-300 ring-opacity-50
-          focus:outline-none focus:ring-4 focus:ring-blue-300
+          border-0 group-hover:ring-4 ring-green-300 ring-opacity-50
+          focus:outline-none focus:ring-4 focus:ring-green-300
           text-white flex items-center justify-center
           w-14 h-14 md:w-auto md:h-14 md:min-w-0
         "
@@ -44,7 +44,7 @@ const AddProjectFAB = () => {
         <div className="flex items-center justify-center space-x-2">
           <Plus className="h-7 w-7 md:mr-2 animate-pulse group-hover:animate-none" />
           <span className="hidden md:inline font-semibold tracking-wide">
-            Add Project
+            Post Job
           </span>
         </div>
       </button>

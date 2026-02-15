@@ -4,7 +4,7 @@ interface TabSectionProps {
 }
 
 export default function TabSection({ activeTab, onTabChange }: TabSectionProps) {
-  const tabs = ["All", "Latest", "Oldest", "This Week",];
+  const tabs = ["Active", "Closed", "Full-Time", "Internship"];
   
   return (
     <div className="bg-white rounded-lg shadow w-full">

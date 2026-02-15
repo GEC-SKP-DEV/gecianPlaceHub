@@ -110,21 +110,21 @@ export default function FilterSection({ onFilterSubmit, onClearFilters }: Filter
   const FilterContent = () => (
     <div className="space-y-4 w-full">
       {filters.map((filter) => (
-        <div key={filter.title} className="border rounded-lg shadow-sm bg-white">
+        <div key={filter.title} className="border border-green-200 rounded-lg shadow-sm bg-white hover:shadow-md transition-shadow">
           <button
             onClick={() => toggleDropdown(filter.title)}
-            className="w-full px-4 py-3 flex justify-between items-center hover:bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-3 flex justify-between items-center hover:bg-green-50 rounded-t-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
           >
-            <span className="font-medium text-gray-700">{filter.title}</span>
+            <span className="font-semibold text-gray-800">{filter.title}</span>
             {openDropdowns[filter.title] ? (
-              <ChevronUp className="w-5 h-5 text-gray-500" />
+              <ChevronUp className="w-5 h-5 text-green-600" />
             ) : (
-              <ChevronDown className="w-5 h-5 text-gray-500" />
+              <ChevronDown className="w-5 h-5 text-green-600" />
             )}
           </button>
 
           {openDropdowns[filter.title] && (
-            <div className="px-4 pb-3 border-t">
+            <div className="px-4 pb-3 border-t border-green-200">
               {filter.title === "Domain" ? (
                 <DomainFilterOptions
                   filter={filter}
@@ -136,13 +136,13 @@ export default function FilterSection({ onFilterSubmit, onClearFilters }: Filter
                   {filter.options.map((option) => (
                     <label
                       key={option}
-                      className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-2 rounded"
+                      className="flex items-center space-x-3 cursor-pointer hover:bg-green-50 p-2 rounded transition-colors"
                     >
                       <input
                         type="checkbox"
                         checked={isSelected(filter.title, option)}
                         onChange={() => toggleOption(filter.title, option)}
-                        className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer focus:ring-2 focus:ring-blue-500 focus:outline-none checked:bg-blue-500 checked:border-blue-500"
+                        className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer focus:ring-2 focus:ring-green-500 focus:outline-none checked:bg-green-500 checked:border-green-500"
                       />
                       <span className="text-sm text-gray-700">{option}</span>
                     </label>
@@ -156,7 +156,7 @@ export default function FilterSection({ onFilterSubmit, onClearFilters }: Filter
 
       <button
         onClick={handleSubmit}
-        className="w-full mt-6 px-4 py-3 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center space-x-2 transition-colors"
+        className="w-full mt-6 px-4 py-3 bg-green-600 text-white rounded-lg shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center justify-center space-x-2 transition-colors font-medium"
       >
         <Filter className="w-5 h-5" />
         <span>Apply Filters {selectedCount > 0 && `(${selectedCount})`}</span>
@@ -164,7 +164,7 @@ export default function FilterSection({ onFilterSubmit, onClearFilters }: Filter
 
       <button
         onClick={clearFilters}
-        className="w-full mt-2 px-4 py-3 bg-gray-600 text-white rounded-lg shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 flex items-center justify-center space-x-2 transition-colors"
+        className="w-full mt-2 px-4 py-3 bg-gray-500 text-white rounded-lg shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 flex items-center justify-center space-x-2 transition-colors font-medium"
       >
         <X className="w-5 h-5" />
         <span>Clear Filters</span>
@@ -221,7 +221,11 @@ export default function FilterSection({ onFilterSubmit, onClearFilters }: Filter
   return (
     <>
       {/* Desktop View */}
-      <div className="hidden md:block p-4 space-y-4 w-64 bg-white">
+      <div className="hidden md:block p-4 space-y-4 w-64 bg-gradient-to-br from-blue-50 to-white border-r border-green-200">
+        <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <Filter className="w-5 h-5 text-green-600" />
+          Filter Jobs
+        </h2>
         <FilterContent />
       </div>
 
@@ -229,9 +233,9 @@ export default function FilterSection({ onFilterSubmit, onClearFilters }: Filter
       <div className="md:hidden">
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-24 right-6 z-40 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full p-4 shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="fixed bottom-24 right-6 z-40 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-full p-4 shadow-lg hover:shadow-xl hover:scale-110 focus:outline-none focus:ring-2 focus:ring-green-400 transition-all"
         >
-          <Filter className="w-6 h-6 md:mr-2 animate-pulse group-hover:animate-none" />
+          <Filter className="w-6 h-6 animate-pulse hover:animate-none" />
         </button>
 
         {isOpen && (
@@ -240,14 +244,17 @@ export default function FilterSection({ onFilterSubmit, onClearFilters }: Filter
               className="absolute inset-0 bg-black bg-opacity-50"
               onClick={() => setIsOpen(false)}
             />
-            <div className="absolute inset-0 bg-white flex flex-col">
-              <div className="flex justify-between items-center p-4 border-b">
-                <h2 className="text-lg font-semibold text-black">Filters</h2>
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-white flex flex-col">
+              <div className="flex justify-between items-center p-4 border-b border-green-200 bg-white">
+                <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                  <Filter className="w-5 h-5 text-green-600" />
+                  Filter Jobs
+                </h2>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 hover:bg-gray-100 rounded-full"
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                 >
-                  <X className="text-black w-6 h-6" />
+                  <X className="text-gray-700 w-6 h-6" />
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto p-4">

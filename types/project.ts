@@ -1,3 +1,45 @@
+export interface JobPosting {
+  jobId?: number;
+  companyName: string;
+  roleTitle: string;
+  roleDescription: string;
+  venue: string;
+  salary: string;
+  ctc?: string;
+  lastDate: string;
+  companyLink: string;
+  createdAt: string;
+  isActive?: boolean;
+  jobContacts?: { name: string; designation: string; email?: string; phone?: string }[];
+  contactEmail?: string;
+  contactPhone?: string;
+  contactWhatsApp?: string;
+  selectedFilters: Record<string, string | string[]>;
+}
+
+export interface JobContact {
+  contactId?: number;
+  name: string;
+  designation: string;
+  email?: string;
+  phone?: string;
+}
+
+export interface FilterOption {
+  optionId: number;
+  optionName: string;
+}
+
+export interface Filter {
+  categoryId: number;
+  categoryName: string;
+  inputType: "single-select" | "multi-select" | "range-slider" | "text";
+  minValue?: number;
+  maxValue?: number;
+  options: FilterOption[];
+}
+
+// Legacy types (kept for backward compatibility)
 export interface Project {
   projectId?: number;
   projectName: string;
@@ -11,8 +53,6 @@ export interface Project {
   contactLinkedIn?: string;
   contactEmail?: string;
   contactWhatsApp?: string;
-
-  // ✅ Add this to fix the "any" error in edit page
   selectedCategoryOptions: Record<string, string | string[]>;
 }
 
@@ -29,3 +69,4 @@ export interface Category {
   maxValue?: number;
   options: CategoryOption[];
 }
+
