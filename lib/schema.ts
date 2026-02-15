@@ -3,9 +3,9 @@ import {
   serial,
   text,
   timestamp,
-  integer,
   varchar,
   foreignKey,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 // -------------------- Users --------------------
@@ -14,81 +14,36 @@ export const users = pgTable("users", {
   userRole: varchar("user_role", { length: 50 }).notNull(),
 });
 
-
-// -------------------- Categories --------------------
-export const categories = pgTable("categories", {
-  categoryId: serial("category_id").primaryKey(),
-  category: varchar("category", { length: 100 }).notNull(), // e.g. Project Type, Department, Programming Language
-  inputType: varchar("input_type", { length: 50 }).default("single-select").notNull(), // single-select, multi-select, range-slider, text
-  minValue: integer("min_value"), // For range sliders
-  maxValue: integer("max_value"), // For range sliders
-});
-
-// -------------------- Projects --------------------
+// -------------------- Job Postings --------------------
 export const projects = pgTable("projects", {
   projectId: serial("project_id").primaryKey(),
-  projectName: varchar("project_name", { length: 255 }).notNull(),
-  projectDescription: text("project_description"),
-  projectLink: varchar("project_link", { length: 255 }),
+
+  companyName: varchar("company_name", { length: 255 }).notNull(),
+  roleName: varchar("role_name", { length: 255 }).notNull(),
+  companyDescription: text("company_description"),
+
+  googleFormLink: varchar("google_form_link", { length: 255 }),
+
+  jobType: varchar("job_type", { length: 100 }).notNull(),
+  department: varchar("department", { length: 100 }).notNull(),
+  qualification: varchar("qualification", { length: 100 }).notNull(),
+
+  backlog: varchar("backlog", { length: 50 }),
+  passoutYear: varchar("passout_year", { length: 10 }),
+
+  venue: varchar("venue", { length: 255 }),
+  ctc: varchar("ctc", { length: 100 }),
+
+  driveDate: timestamp("drive_date"),
+  registrationDeadline: timestamp("registration_deadline"),
+
+  isActive: boolean("is_active").default(true),
+
   createdAt: timestamp("created_at").defaultNow(),
   createdByUid: varchar("created_by_uid", { length: 255 }),
-  customDomain: varchar("custom_domain", { length: 255 }),
-  // New contact fields for collaboration
-  contactInstagram: varchar("contact_instagram", { length: 255 }),
-  contactLinkedIn: varchar("contact_linkedin", { length: 255 }),
-  contactEmail: varchar("contact_email", { length: 255 }),
-  contactWhatsApp: varchar("contact_whatsapp", { length: 255 }),
 }, (table) => ({
   fk_createdBy: foreignKey({
     columns: [table.createdByUid],
     foreignColumns: [users.uid],
-  }),
-}));
-
-
-// -------------------- Team Members --------------------
-export const teamMembers = pgTable("team_members", {
-  memberId: serial("member_id").primaryKey(),
-  projectId: integer("project_id"),
-  name: varchar("name", { length: 100 }),
-  linkedin: varchar("linkedin", { length: 255 }),
-}, (table) => ({
-  fk_projectId: foreignKey({
-    columns: [table.projectId],
-    foreignColumns: [projects.projectId],
-  }),
-}));
-
-
-// -------------------- Generic Category Options Values --------------------
-export const categoryOptionValues = pgTable("category_option_values", {
-  optionId: serial("option_id").primaryKey(),
-  optionName: varchar("option_name", { length: 255 }).notNull(),
-  categoryId: integer("category_id"),
-}, (table) => ({
-  fk_categoryId: foreignKey({
-    columns: [table.categoryId],
-    foreignColumns: [categories.categoryId],
-  }),
-}));
-
-// -------------------- Project-Category Options Link Table --------------------
-export const projectOptions = pgTable("project_options", {
-  id: serial("id").primaryKey(),
-  projectId: integer("project_id"),
-  categoryId: integer("category_id"),
-  optionId: integer("option_id"),
-}, (table) => ({
-  fk_projectId: foreignKey({
-    columns: [table.projectId],
-    foreignColumns: [projects.projectId],
-  }),
-  fk_categoryId: foreignKey({
-    columns: [table.categoryId],
-    foreignColumns: [categories.categoryId],
-  }),
-  fk_optionId: foreignKey({
-    columns: [table.optionId],
-    foreignColumns: [categoryOptionValues.optionId],
   }),
 }));
