@@ -1,26 +1,20 @@
-import { MapPin, DollarSign, Briefcase, Link as LinkIcon, Mail, MessageCircle, Calendar } from "lucide-react";
+import { MapPin, DollarSign, Briefcase, Link as LinkIcon, Calendar } from "lucide-react";
 import Link from "next/link";
-import { Project } from "@/types/project";
 
 interface ProjectCardProps {
-  project: Project | any;
+  project: any;
 }
 
 export default function ProjectCard({ project }: ProjectCardProps) {
-  // Support both new schema keys and legacy keys
-  const companyName = project.companyName ?? project.projectName ?? project.company;
-  const roleName = project.roleName ?? project.roleTitle ?? project.projectName;
-  const jobType = project.jobType ?? project.categories?.find((c: any) => c.categoryName === "Job Type")?.optionName;
-  const department = project.department ?? project.categories?.find((c: any) => c.categoryName === "Department")?.optionName;
-  const qualification = project.qualification ?? project.categories?.find((c: any) => c.categoryName === "Qualification")?.optionName;
-  const backlog = project.backlog ?? project.categories?.find((c: any) => c.categoryName === "Backlog")?.optionName;
-  const passoutYear = project.passoutYear ?? project.categories?.find((c: any) => c.categoryName === "Passout Year")?.optionName;
-  const venue = project.venue ?? project.categories?.find((c: any) => c.categoryName === "Venue")?.optionName ?? project.customDomain;
-  const ctc = project.ctc ?? project.salary ?? project.ctcRange ?? project.salaryRange;
-  const registrationDeadline = project.registrationDeadline ? new Date(project.registrationDeadline) : project.lastDate ? new Date(project.lastDate) : null;
-  const googleFormLink = project.googleFormLink ?? project.projectLink ?? project.companyLink;
-
-  const id = project.projectId ?? project.jobId ?? project.id;
+  const companyName = project.companyName;
+  const roleName = project.roleName;
+  const jobType = project.jobType;
+  const department = project.department;
+  const venue = project.venue;
+  const ctc = project.ctc;
+  const registrationDeadline = project.registrationDeadline ? new Date(project.registrationDeadline) : null;
+  const googleFormLink = project.googleFormLink;
+  const id = project.projectId;
 
   return (
     <Link href={`/projects/${id}`} className="block">
@@ -57,22 +51,11 @@ export default function ProjectCard({ project }: ProjectCardProps) {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div>
                 <p className="text-gray-500 text-xs">Department</p>
                 <p className="text-gray-800 font-medium">{department ?? "N/A"}</p>
               </div>
-              <div>
-                <p className="text-gray-500 text-xs">Passout Year</p>
-                <p className="text-gray-800 font-medium">{passoutYear ?? "N/A"}</p>
-              </div>
-              <div>
-                <p className="text-gray-500 text-xs">Backlog</p>
-                <p className="text-gray-800 font-medium">{backlog ?? "N/A"}</p>
-              </div>
-            </div>
-
-            <div className="mt-4 flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <Calendar className="w-5 h-5 text-green-600" />
                 <div>
@@ -80,19 +63,19 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                   <p className="text-gray-800 font-medium">{registrationDeadline ? registrationDeadline.toLocaleDateString() : "N/A"}</p>
                 </div>
               </div>
+            </div>
 
-              <div>
-                <a
-                  href={googleFormLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="group inline-flex items-center gap-2 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-all duration-200"
-                >
-                  <LinkIcon className="w-4 h-4" />
-                  <span>Apply / Register</span>
-                </a>
-              </div>
+            <div className="mt-4 flex justify-end">
+              <a
+                href={googleFormLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="group inline-flex items-center gap-2 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-all duration-200"
+              >
+                <LinkIcon className="w-4 h-4" />
+                <span>Apply / Register</span>
+              </a>
             </div>
           </div>
         </div>

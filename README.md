@@ -56,6 +56,7 @@ FIREBASE_ADMIN_CLIENT_EMAIL=your_firebase_admin_client_email
 
 ### 4. Database Migration & Seeding
 ```bash
+npx drizzle-kit generate
 npx drizzle-kit push
 npx tsx drizzle/seed.ts
 ```
